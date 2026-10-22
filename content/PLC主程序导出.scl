@@ -1,0 +1,251 @@
+// 鍒濆嬪寲
+IF NOT #s01 THEN
+    // 閽ュ寵鏈寮鍚鏃跺嶄綅
+    #auto_step := 0;
+    #ped_active := FALSE;
+ELSE
+    // 鎵嬪姩妯″紡
+    IF #s02 = TRUE THEN
+        // 杞浠朵簰閿侊細鍥涗釜鏂瑰悜鐨勭豢鐏璇锋眰浜掓枼
+        #k03 := #s03 AND NOT #s04 AND NOT #s05 AND NOT #s06;
+        #k01 := NOT #k03;
+        #k02 := FALSE;
+        
+        #k06 := #s04 AND NOT #s03 AND NOT #s05 AND NOT #s06;
+        #k04 := NOT #k06;
+        #k05 := FALSE;
+        
+        #k09 := #s05 AND NOT #s03 AND NOT #s04 AND NOT #s06;
+        #k07 := NOT #k09;
+        #k08 := FALSE;
+        
+        #k12 := #s06 AND NOT #s03 AND NOT #s04 AND NOT #s05;
+        #k10 := NOT #k12;
+        #k11 := FALSE;
+        
+        // 鑷鍔
+    ELSE
+        CASE #auto_step OF
+            0:
+                #auto_step := 1;
+                
+            1:  // 鍗楀寳鐩磋岀豢鐏
+                #time_preset := T#15s;
+                IF #timer_auto.Q THEN
+                    #auto_step := 2;
+                END_IF;
+                
+            2:  // 鍗楀寳鐩磋岄粍鐏
+                #time_preset := T#3s;
+                IF #timer_auto.Q THEN
+                    #auto_step := 3;
+                END_IF;
+                
+            3:  // 鍗楀寳宸﹁浆缁跨伅
+                #time_preset := T#10s;
+                IF #timer_auto.Q THEN
+                    #auto_step := 4;
+                END_IF;
+                
+            4:  // 鍗楀寳宸﹁浆榛勭伅
+                #time_preset := T#3s;
+                IF #timer_auto.Q THEN
+                    #auto_step := 5;
+                END_IF;
+                
+            5:  // 涓滆タ鐩磋岀豢鐏
+                #time_preset := T#15s;
+                IF #timer_auto.Q THEN
+                    #auto_step := 6;
+                END_IF;
+                
+            6:  // 涓滆タ鐩磋岄粍鐏
+                #time_preset := T#3s;
+                IF #timer_auto.Q THEN
+                    #auto_step := 7;
+                END_IF;
+                
+            7:  // 涓滆タ宸﹁浆缁跨伅
+                #time_preset := T#10s;
+                IF #timer_auto.Q THEN
+                    #auto_step := 8;
+                END_IF;
+                
+            8:  // 涓滆タ宸﹁浆榛勭伅
+                #time_preset := T#3s;
+                IF #timer_auto.Q THEN
+                    #auto_step := 1;
+                END_IF;
+                
+            ELSE
+                #auto_step := 1;
+        END_CASE;
+        
+        // 椹卞姩鑷鍔ㄦā寮忕殑瀹氭椂鍣
+        #timer_auto(IN := TRUE,
+                    PT := #time_preset);
+        IF #timer_auto.Q THEN
+            #timer_auto(IN := FALSE,
+                        PT := #time_preset);
+        END_IF;
+        
+
+        #blink_1hz := ((TIME_TO_DINT(#timer_auto.ET) / 500) MOD 2) = 0;
+        
+        #k03 := (#auto_step = 1);
+        #k02 := (#auto_step = 2) AND #blink_1hz; 
+        #k01 := NOT (#auto_step = 1 OR #auto_step = 2); 
+        
+        #k06 := (#auto_step = 3);
+        #k05 := (#auto_step = 4) AND #blink_1hz;
+        #k04 := NOT (#auto_step = 3 OR #auto_step = 4);
+        
+        #k09 := (#auto_step = 5);
+        #k08 := (#auto_step = 6) AND #blink_1hz;
+        #k07 := NOT (#auto_step = 5 OR #auto_step = 6);
+        
+        #k12 := (#auto_step = 7);
+        #k11 := (#auto_step = 8) AND #blink_1hz;
+        #k10 := NOT (#auto_step = 7 OR #auto_step = 8);
+        
+        
+    END_IF;
+    
+    // 浜鸿屾í閬撴帶鍒
+    IF #s14 AND NOT #ped_active THEN
+        #ped_active := TRUE;
+    END_IF;
+    
+    // 琛屼汉杩囪楀畾鏃堕昏緫
+    #timer_ped(IN := #ped_active,
+               PT := T#5s);
+    
+    IF #ped_active THEN
+        #k14 := FALSE;
+        #k13 := TRUE;
+        #k16 := FALSE;
+        #k15 := TRUE;
+        
+        IF #timer_ped.Q THEN
+            #ped_active := FALSE;
+        END_IF;
+    ELSE
+        #k14 := TRUE;
+        #k13 := FALSE;
+        #k16 := TRUE;
+        #k15 := FALSE;
+    END_IF;
+    
+    // ==========================================
+    // 5.鍊掕℃椂
+    // 棰滆壊绾﹀畾: 1=缁跨伅, 2=榛勭伅, 3=绾㈢伅
+    // ==========================================
+    IF #s02 THEN
+        // 鎵嬪姩妯″紡锛氭病鏈夊掕℃椂(0)锛屽彧鏍规嵁鐗╃悊缁跨伅寮鍏崇姸鎬佹敼鍙橀滆壊
+        #hmi_ns_str_time := 0;
+        #hmi_ns_str_color := 3;
+        IF #k03 THEN
+            #hmi_ns_str_color := 1;
+        END_IF;
+        #hmi_ns_left_time := 0;
+        #hmi_ns_left_color := 3;
+        IF #k06 THEN
+            #hmi_ns_left_color := 1;
+        END_IF;
+        #hmi_ew_str_time := 0;
+        #hmi_ew_str_color := 3;
+        IF #k09 THEN
+            #hmi_ew_str_color := 1;
+        END_IF;
+        #hmi_ew_left_time := 0;
+        #hmi_ew_left_color := 3;
+        IF #k12 THEN
+            #hmi_ew_left_color := 1;
+        END_IF;
+    ELSE
+        // 鑷鍔ㄦā寮忥細鎻愬彇褰撳墠鐩镐綅鍓╀綑鐨勭掓暟
+        #t_remain := DINT_TO_INT(TIME_TO_DINT(#time_preset) / 1000) - DINT_TO_INT(TIME_TO_DINT(#timer_auto.ET) / 1000);
+        IF #t_remain < 0 THEN
+            #t_remain := 0;
+        END_IF;
+        
+        // 鏍稿績鏃堕棿杞存姇灏 (绮剧‘璁＄畻鍏朵粬鏂瑰悜绛夊緟缁跨伅鐨勬椂闂)
+        CASE #auto_step OF
+            1: // 鐩镐綅: 鍗楀寳鐩磋岀豢鐏
+                #hmi_ns_str_time := #t_remain;
+                #hmi_ns_str_color := 1; // 缁
+                #hmi_ns_left_time := #t_remain + 3;
+                #hmi_ns_left_color := 3; // 绾 (绛夋帴涓嬫潵鐨勯粍鐏璧板畬)
+                #hmi_ew_str_time := #t_remain + 16;
+                #hmi_ew_str_color := 3; // 绾 (3榛+10宸+3榛)
+                #hmi_ew_left_time := #t_remain + 34;
+                #hmi_ew_left_color := 3; // 绾
+            2: // 鐩镐綅: 鍗楀寳鐩磋岄粍鐏
+                #hmi_ns_str_time := #t_remain;
+                #hmi_ns_str_color := 2; // 榛
+                #hmi_ns_left_time := #t_remain;
+                #hmi_ns_left_color := 3;
+                #hmi_ew_str_time := #t_remain + 13;
+                #hmi_ew_str_color := 3;
+                #hmi_ew_left_time := #t_remain + 31;
+                #hmi_ew_left_color := 3;
+            3: // 鐩镐綅: 鍗楀寳宸﹁浆缁跨伅
+                #hmi_ns_str_time := #t_remain + 34;
+                #hmi_ns_str_color := 3; // 绾
+                #hmi_ns_left_time := #t_remain;
+                #hmi_ns_left_color := 1; // 缁
+                #hmi_ew_str_time := #t_remain + 3;
+                #hmi_ew_str_color := 3;
+                #hmi_ew_left_time := #t_remain + 21;
+                #hmi_ew_left_color := 3;
+            4: // 鐩镐綅: 鍗楀寳宸﹁浆榛勭伅
+                #hmi_ns_str_time := #t_remain + 31;
+                #hmi_ns_str_color := 3;
+                #hmi_ns_left_time := #t_remain;
+                #hmi_ns_left_color := 2; // 榛
+                #hmi_ew_str_time := #t_remain;
+                #hmi_ew_str_color := 3;
+                #hmi_ew_left_time := #t_remain + 18;
+                #hmi_ew_left_color := 3;
+            5: // 鐩镐綅: 涓滆タ鐩磋岀豢鐏
+                #hmi_ns_str_time := #t_remain + 16;
+                #hmi_ns_str_color := 3;
+                #hmi_ns_left_time := #t_remain + 34;
+                #hmi_ns_left_color := 3;
+                #hmi_ew_str_time := #t_remain;
+                #hmi_ew_str_color := 1; // 缁
+                #hmi_ew_left_time := #t_remain + 3;
+                #hmi_ew_left_color := 3;
+            6: // 鐩镐綅: 涓滆タ鐩磋岄粍鐏
+                #hmi_ns_str_time := #t_remain + 13;
+                #hmi_ns_str_color := 3;
+                #hmi_ns_left_time := #t_remain + 31;
+                #hmi_ns_left_color := 3;
+                #hmi_ew_str_time := #t_remain;
+                #hmi_ew_str_color := 2; // 榛
+                #hmi_ew_left_time := #t_remain;
+                #hmi_ew_left_color := 3;
+            7: // 鐩镐綅: 涓滆タ宸﹁浆缁跨伅
+                #hmi_ns_str_time := #t_remain + 3;
+                #hmi_ns_str_color := 3;
+                #hmi_ns_left_time := #t_remain + 21;
+                #hmi_ns_left_color := 3;
+                #hmi_ew_str_time := #t_remain + 34;
+                #hmi_ew_str_color := 3;
+                #hmi_ew_left_time := #t_remain;
+                #hmi_ew_left_color := 1; // 缁
+            8: // 鐩镐綅: 涓滆タ宸﹁浆榛勭伅
+                #hmi_ns_str_time := #t_remain;
+                #hmi_ns_str_color := 3;
+                #hmi_ns_left_time := #t_remain + 18;
+                #hmi_ns_left_color := 3;
+                #hmi_ew_str_time := #t_remain + 31;
+                #hmi_ew_str_color := 3;
+                #hmi_ew_left_time := #t_remain;
+                #hmi_ew_left_color := 2; // 榛
+        END_CASE;
+    END_IF;
+    
+    
+    
+END_IF;
